@@ -1,0 +1,45 @@
+# Tracker Detection
+
+This script is used to detect the presence of specific trackers on websites using `BeautifulSoup` and `requests`. It checks for patterns within the `<script>` tags of the websites listed.
+
+## Script
+
+```python
+from bs4 import BeautifulSoup
+import requests
+import re
+
+# Recon
+script_patterns = {
+    "meta": "https://connect.facebook.net/en_US/fbevents.js",
+    "google": "gtag\\('config'"
+}
+
+sites = [
+    "taggart-tech.com",
+    "amazon.com",
+    "discord.com",
+    "shop.bbc.com"
+]
+
+results = {}
+
+def pattern_match(pattern: str, sample: str) -> bool:
+    """
+    Checks whether a pattern is found in a sample.
+    """
+    return re.search(pattern, sample) is not None
+
+for s in sites:
+    results[s] = []
+    content = requests.get(f"https://{s}").text
+    soup = BeautifulSoup(content, 'html.parser')
+    
+    script_tags = [t.text for t in soup.find_all("script")]
+    
+    for p in script_patterns:
+        pattern = script_patterns[p]
+        if any([pattern_match(pattern, t) for t in script_tags]):
+            results[s].append(p)
+
+results
